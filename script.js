@@ -31,7 +31,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const newsletterForm = document.getElementById('newsletterForm');
 
     let isPlaying = false;
-    let isClosingPlayer = false;
     let currentAudio = new Audio();
 
     // ============================================
@@ -314,13 +313,13 @@ document.addEventListener('DOMContentLoaded', function() {
         audioWave.classList.remove('playing');
     });
 
-    currentAudio.addEventListener('error', () => {
-        if (isClosingPlayer) return;
+    function handleAudioError() {
         showToast('Error loading audio file', 'error');
         isPlaying = false;
         updatePlayPauseIcon();
         audioWave.classList.remove('playing');
-    });
+    }
+    currentAudio.addEventListener('error', handleAudioError);
 
     closeAudioModal.addEventListener('click', closeAudioPlayer);
     audioModal.addEventListener('click', function(e) {
@@ -328,18 +327,21 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function closeAudioPlayer() {
-        isClosingPlayer = true;
         audioModal.classList.remove('active');
         document.body.style.overflow = '';
+        currentAudio.removeEventListener('error', handleAudioError);
         currentAudio.pause();
         currentAudio.src = '';
+        currentAudio.removeAttribute('src');
         isPlaying = false;
         updatePlayPauseIcon();
         audioWave.classList.remove('playing');
         progressFill.style.width = '0%';
         currentTimeEl.textContent = '0:00';
         totalTimeEl.textContent = '0:00';
-        setTimeout(() => { isClosingPlayer = false; }, 0);
+        setTimeout(() => {
+            currentAudio.addEventListener('error', handleAudioError);
+        }, 200);
     }
 
     playPauseBtn.addEventListener('click', function() {
