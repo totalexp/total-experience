@@ -76,6 +76,18 @@ document.addEventListener('DOMContentLoaded', function() {
         return '';
     }
 
+    // Browsers ignore the <a download> attribute for cross-origin URLs
+    // (like Cloudinary) unless the server sends a Content-Disposition:
+    // attachment header. Cloudinary supports forcing that via the
+    // 'fl_attachment' flag inserted into the URL after '/upload/'.
+    function getDownloadSrc(src) {
+        if (!src) return src;
+        if (src.includes('res.cloudinary.com') && src.includes('/upload/') && !src.includes('fl_attachment')) {
+            return src.replace('/upload/', '/upload/fl_attachment/');
+        }
+        return src;
+    }
+
     function renderMessages(messages) {
         audioGrid.innerHTML = messages.map(msg => {
             const audioSrc = getAudioSrc(msg);
@@ -84,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             let actionsHtml = '';
             if (audioSrc) {
-                actionsHtml += `<a href="${audioSrc}" download class="download-btn" title="Download"><i class="fas fa-download"></i></a>`;
+                actionsHtml += `<a href="${getDownloadSrc(audioSrc)}" download class="download-btn" title="Download"><i class="fas fa-download"></i></a>`;
             }
             if (msg.videoUrl) {
                 const isFacebook = msg.videoPlatform === 'facebook' || msg.videoUrl.includes('facebook');
@@ -260,7 +272,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 audioPlayerTitle.textContent = title;
                 audioPlayerSpeaker.textContent = speaker;
-                audioDownloadBtn.href = audioSrc;
+                audioDownloadBtn.href = getDownloadSrc(audioSrc);
                 audioDownloadBtn.download = title + '.mp3';
 
                 audioModal.classList.add('active');
