@@ -65,16 +65,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function getAudioSrc(msg) {
-    if (msg.audioUrl) return msg.audioUrl;
-    if (msg.audioFile) {
-        // If audioFile is already a full URL (e.g. Cloudinary), use it
-        // as-is. Only prepend '/uploads/' for legacy local filenames
-        // that are NOT already absolute URLs.
-        if (/^https?:\/\//i.test(msg.audioFile)) return msg.audioFile;
-        return '/uploads/' + msg.audioFile;
+        if (msg.audioUrl) return msg.audioUrl;
+        if (msg.audioFile) {
+            // If audioFile is already a full URL (e.g. Cloudinary), use it
+            // as-is. Only prepend '/uploads/' for legacy local filenames
+            // that are NOT already absolute URLs.
+            if (/^https?:\/\//i.test(msg.audioFile)) return msg.audioFile;
+            return '/uploads/' + msg.audioFile;
+        }
+        return '';
     }
-    return '';
-}
 
     function renderMessages(messages) {
         audioGrid.innerHTML = messages.map(msg => {
