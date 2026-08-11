@@ -318,8 +318,7 @@ document.addEventListener('DOMContentLoaded', function() {
         progressFill.style.width = '0%';
         currentTimeEl.textContent = '0:00';
         totalTimeEl.textContent = '0:00';
-        audioElement.onerror = null; // Ignore errors when manually closed
-}
+        
     }
 
     playPauseBtn.addEventListener('click', function() {
