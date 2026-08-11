@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const newsletterForm = document.getElementById('newsletterForm');
 
     let isPlaying = false;
+    let isClosingPlayer = false;
     let currentAudio = new Audio();
 
     // ============================================
@@ -314,6 +315,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     currentAudio.addEventListener('error', () => {
+        if (isClosingPlayer) return;
         showToast('Error loading audio file', 'error');
         isPlaying = false;
         updatePlayPauseIcon();
@@ -326,6 +328,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function closeAudioPlayer() {
+        isClosingPlayer = true;
         audioModal.classList.remove('active');
         document.body.style.overflow = '';
         currentAudio.pause();
@@ -336,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
         progressFill.style.width = '0%';
         currentTimeEl.textContent = '0:00';
         totalTimeEl.textContent = '0:00';
-        
+        setTimeout(() => { isClosingPlayer = false; }, 0);
     }
 
     playPauseBtn.addEventListener('click', function() {
