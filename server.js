@@ -69,11 +69,14 @@ function requireAdmin(req, res, next) {
 // ============================================
 // CLOUDINARY STORAGE CONFIG (FIXED)
 // ============================================
+// NOTE: resource_type changed from 'raw' to 'video' — Cloudinary handles
+// audio files through the video pipeline, which gives correct content-type
+// headers and proper range-request support for streaming/seeking in <audio>.
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
         folder: 'totalexp-sermons',
-        resource_type: 'raw',
+        resource_type: 'video',
         allowed_formats: ['mp3', 'wav', 'm4a']
     }
 });
@@ -238,6 +241,11 @@ app.post('/api/messages', requireAdmin, uploadAudio, (req, res) => {
             date,
             duration: duration || '00:00',
             plays: 0,
+            // FIX: expose the Cloudinary URL as `audioUrl` (what the frontend
+            // checks first). Previously only `audioFile` was set, so the
+            // frontend fell through to its "/uploads/" + audioFile fallback
+            // and mangled the full Cloudinary URL into a broken path.
+            audioUrl: audioUrl,
             audioFile: audioUrl,
             videoUrl: videoUrl || '',
             videoPlatform: videoPlatform || '',
@@ -267,7 +275,7 @@ app.delete('/api/messages/:id', requireAdmin, async (req, res) => {
         if (message.audioFile) {
             const publicId = message.audioFile.split('/').pop().split('.')[0];
             try {
-                await cloudinary.uploader.destroy(`totalexp-sermons/${publicId}`, { resource_type: 'raw' });
+                await cloudinary.uploader.destroy(`totalexp-sermons/${publicId}`, { resource_type: 'video' });
             } catch (cloudErr) {
                 console.warn('Could not delete from Cloudinary:', cloudErr.message);
             }
