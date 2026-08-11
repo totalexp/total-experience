@@ -7,28 +7,26 @@ const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 require('dotenv').config();
 
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
-// Used to sign admin session tokens. Falls back to ADMIN_PASSWORD if not set,
-// but for real deployments set ADMIN_SECRET to a long random string in .env.
 const ADMIN_SECRET = process.env.ADMIN_SECRET || ADMIN_PASSWORD;
-const TOKEN_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
+const TOKEN_TTL_MS = 12 * 60 * 60 * 1000;
 const DB_PATH = path.join(__dirname, 'db.json');
-const UPLOADS_DIR = path.join(__dirname, 'uploads');
-
-if (!fs.existsSync(UPLOADS_DIR)) {
-    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-}
 
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
-app.use('/uploads', express.static(UPLOADS_DIR));
 
-// ============================================
-// DATABASE HELPERS
-// ============================================
 function readDB() {
     try {
         const data = fs.readFileSync(DB_PATH, 'utf8');
@@ -42,9 +40,6 @@ function writeDB(data) {
     fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
 }
 
-// ============================================
-// ADMIN AUTH (signed, expiring token)
-// ============================================
 function createToken() {
     const expires = Date.now() + TOKEN_TTL_MS;
     const sig = crypto.createHmac('sha256', ADMIN_SECRET).update(String(expires)).digest('hex');
@@ -56,7 +51,6 @@ function verifyToken(token) {
     const [expiresStr, sig] = token.split('.');
     if (!expiresStr || !sig) return false;
     const expected = crypto.createHmac('sha256', ADMIN_SECRET).update(expiresStr).digest('hex');
-    // constant-time compare
     const a = Buffer.from(sig);
     const b = Buffer.from(expected);
     if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return false;
@@ -73,15 +67,14 @@ function requireAdmin(req, res, next) {
 }
 
 // ============================================
-// MULTER CONFIG
+// CLOUDINARY STORAGE CONFIG (FIXED)
 // ============================================
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, UPLOADS_DIR);
-    },
-    filename: (req, file, cb) => {
-        const uniqueName = `${Date.now()}-${uuidv4()}${path.extname(file.originalname)}`;
-        cb(null, uniqueName);
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'totalexp-sermons',
+        resource_type: 'raw',
+        allowed_formats: ['mp3', 'wav', 'm4a']
     }
 });
 
@@ -104,8 +97,6 @@ const upload = multer({
     }
 });
 
-// Wraps upload.single so multer/file-filter errors return 400 (client error)
-// instead of falling through to the generic 500 handler.
 function uploadAudio(req, res, next) {
     upload.single('audio')(req, res, (err) => {
         if (err) {
@@ -224,7 +215,7 @@ app.post('/api/admin/login', (req, res) => {
 });
 
 // ============================================
-// ADMIN-ONLY ROUTES (require Authorization: Bearer <token>)
+// ADMIN-ONLY ROUTES
 // ============================================
 app.post('/api/messages', requireAdmin, uploadAudio, (req, res) => {
     try {
@@ -238,6 +229,8 @@ app.post('/api/messages', requireAdmin, uploadAudio, (req, res) => {
         }
 
         const db = readDB();
+        const audioUrl = req.file ? req.file.path : '';
+
         const newMessage = {
             id: `msg-${uuidv4().slice(0, 8)}`,
             title: String(title).trim(),
@@ -245,7 +238,7 @@ app.post('/api/messages', requireAdmin, uploadAudio, (req, res) => {
             date,
             duration: duration || '00:00',
             plays: 0,
-            audioFile: req.file ? req.file.filename : '',
+            audioFile: audioUrl,
             videoUrl: videoUrl || '',
             videoPlatform: videoPlatform || '',
             createdAt: new Date().toISOString()
@@ -260,7 +253,7 @@ app.post('/api/messages', requireAdmin, uploadAudio, (req, res) => {
     }
 });
 
-app.delete('/api/messages/:id', requireAdmin, (req, res) => {
+app.delete('/api/messages/:id', requireAdmin, async (req, res) => {
     try {
         const db = readDB();
         const messageIndex = db.messages.findIndex(m => m.id === req.params.id);
@@ -272,9 +265,11 @@ app.delete('/api/messages/:id', requireAdmin, (req, res) => {
         const message = db.messages[messageIndex];
 
         if (message.audioFile) {
-            const filePath = path.join(UPLOADS_DIR, message.audioFile);
-            if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
+            const publicId = message.audioFile.split('/').pop().split('.')[0];
+            try {
+                await cloudinary.uploader.destroy(`totalexp-sermons/${publicId}`, { resource_type: 'raw' });
+            } catch (cloudErr) {
+                console.warn('Could not delete from Cloudinary:', cloudErr.message);
             }
         }
 
@@ -319,6 +314,5 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
     console.log(`Total Experience International server running on http://localhost:${PORT}`);
-    console.log(`Uploads directory: ${UPLOADS_DIR}`);
     console.log(`Database: ${DB_PATH}`);
 });
