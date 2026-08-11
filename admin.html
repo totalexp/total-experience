@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Total Experience International</title>
+    <link rel="icon" type="image/x-icon" href="image/favicon.ico">
+    <link rel="stylesheet" href="admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-box">
+            <div class="login-logo">
+                <i class="fas fa-cross"></i>
+                <h2>Total Experience</h2>
+                <p>Admin Dashboard</p>
+            </div>
+            <form class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="adminPassword" placeholder="Enter admin password" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">
+                    <i class="fas fa-lock"></i> Login
+                </button>
+                <p class="login-hint">Default: Check your .env file</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard" id="dashboard" style="display:none;">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fas fa-cross"></i>
+                <span>Total Exp</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-section="overview">
+                    <i class="fas fa-chart-pie"></i> Overview
+                </a>
+                <a href="#" class="nav-item" data-section="messages">
+                    <i class="fas fa-music"></i> Messages
+                </a>
+                <a href="#" class="nav-item" data-section="upload">
+                    <i class="fas fa-cloud-upload-alt"></i> Upload
+                </a>
+                <a href="#" class="nav-item" data-section="prayers">
+                    <i class="fas fa-hands-praying"></i> Prayers
+                </a>
+                <a href="#" class="nav-item" data-section="contacts">
+                    <i class="fas fa-envelope"></i> Contacts
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="index.html" target="_blank"><i class="fas fa-external-link-alt"></i> View Website</a>
+                <button id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- Header -->
+            <header class="dash-header">
+                <h1 id="pageTitle">Dashboard Overview</h1>
+                <div class="dash-user">
+                    <span>Admin</span>
+                    <div class="user-avatar"><i class="fas fa-user-shield"></i></div>
+                </div>
+            </header>
+
+            <!-- Overview Section -->
+            <section class="content-section active" id="overviewSection">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon blue"><i class="fas fa-music"></i></div>
+                        <div class="stat-info">
+                            <h3 id="statMessages">0</h3>
+                            <p>Total Messages</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green"><i class="fas fa-headphones"></i></div>
+                        <div class="stat-info">
+                            <h3 id="statPlays">0</h3>
+                            <p>Total Plays</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purple"><i class="fas fa-hands-praying"></i></div>
+                        <div class="stat-info">
+                            <h3 id="statPrayers">0</h3>
+                            <p>Prayer Requests</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange"><i class="fas fa-envelope"></i></div>
+                        <div class="stat-info">
+                            <h3 id="statContacts">0</h3>
+                            <p>Contact Messages</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recent-section">
+                    <h2>Recent Messages</h2>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Speaker</th>
+                                    <th>Date</th>
+                                    <th>Plays</th>
+                                    <th>Video</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentMessagesTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Messages Section -->
+            <section class="content-section" id="messagesSection">
+                <div class="section-header-row">
+                    <h2>All Messages</h2>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Speaker</th>
+                                <th>Date</th>
+                                <th>Duration</th>
+                                <th>Plays</th>
+                                <th>Video</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allMessagesTable"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Upload Section -->
+            <section class="content-section" id="uploadSection">
+                <div class="upload-card">
+                    <h2><i class="fas fa-cloud-upload-alt"></i> Upload New Message</h2>
+                    <form class="upload-form" id="uploadForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Message Title *</label>
+                                <input type="text" id="uploadTitle" placeholder="e.g. The Power of Faith" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Speaker Name *</label>
+                                <input type="text" id="uploadSpeaker" placeholder="e.g. Pastor John Smith" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Date *</label>
+                                <input type="date" id="uploadDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Duration</label>
+                                <input type="text" id="uploadDuration" placeholder="e.g. 45:30">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Video Link (Optional)</label>
+                            <input type="url" id="uploadVideoUrl" placeholder="https://youtube.com/watch?v=... or https://facebook.com/watch?v=...">
+                            <small class="form-hint">Leave empty if no video available</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Audio File *</label>
+                            <div class="file-upload-box" id="fileUploadBox">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Drag & drop audio file here</p>
+                                <span>or click to browse</span>
+                                <input type="file" id="uploadAudioFile" accept="audio/*" required>
+                            </div>
+                            <div class="file-name" id="fileNameDisplay"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full">
+                            <i class="fas fa-upload"></i> Upload Message
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Prayers Section -->
+            <section class="content-section" id="prayersSection">
+                <div class="section-header-row">
+                    <h2>Prayer Requests & Feedback</h2>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Type</th>
+                                <th>Message</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="prayersTable"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Contacts Section -->
+            <section class="content-section" id="contactsSection">
+                <div class="section-header-row">
+                    <h2>Contact Submissions</h2>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Subject</th>
+                                <th>Message</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contactsTable"></tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Success!</span>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
