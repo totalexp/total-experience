@@ -391,7 +391,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (err) {
             const mailtoSubject = encodeURIComponent(data.subject || 'Message from Website');
             const mailtoBody = encodeURIComponent(`Name: ${data.name}\nEmail: ${data.email}\n\nMessage:\n${data.message}`);
-            window.location.href = `mailto:totalexp@gmail.com?subject=${mailtoSubject}&body=${mailtoBody}`;
+            window.location.href = `mailto:totalexperienceintl@gmail.com?subject=${mailtoSubject}&body=${mailtoBody}`;
             showToast(`Thank you, ${data.name}! Your email client has opened.`, 'success');
             contactForm.reset();
         } finally {
