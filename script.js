@@ -387,8 +387,6 @@ document.addEventListener('DOMContentLoaded', function() {
     window.submitContactForm = async function() {
         const submitBtn = contactForm.querySelector('button[onclick="submitContactForm()"]');
         const originalText = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-        submitBtn.disabled = true;
 
         const nameEl = document.getElementById('name');
         const emailEl = document.getElementById('email');
@@ -399,14 +397,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 nameEl, emailEl, messageEl
             });
             showToast('Form error: please contact the site admin', 'error');
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
             return;
         }
+
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        submitBtn.disabled = true;
 
         const data = {
             name: nameEl.value,
             email: emailEl.value,
+            // subject is optional; use ?. so a missing element never crashes this function
             subject: document.getElementById('subject')?.value || '',
             message: messageEl.value
         };
