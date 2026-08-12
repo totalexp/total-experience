@@ -1,6 +1,4 @@
-/* ============================================
-   TOTAL EXPERIENCE INTERNATIONAL
-   ============================================ */
+/* Total Experience Intl */
 
 *, *::before, *::after {
     margin: 0;
@@ -43,9 +41,7 @@ img {
     padding: 0 24px;
 }
 
-/* ============================================
-   HEADER
-   ============================================ */
+/* Header */
 .header {
     position: fixed;
     top: 0;
@@ -193,9 +189,7 @@ img {
     background: #ffffff;
 }
 
-/* ============================================
-   HERO SECTION
-   ============================================ */
+/* Hero */
 .hero {
     position: relative;
     min-height: 100vh;
@@ -366,9 +360,7 @@ img {
     border-radius: 2px;
 }
 
-/* ============================================
-   SECTION STYLES
-   ============================================ */
+/* Section headers */
 .section-header {
     text-align: center;
     margin-bottom: 60px;
@@ -410,9 +402,7 @@ img {
     margin: 20px auto 0;
 }
 
-/* ============================================
-   ABOUT SECTION
-   ============================================ */
+/* About */
 .about {
     padding: 120px 0;
     background: #ffffff;
@@ -470,9 +460,11 @@ img {
     line-height: 1.8;
 }
 
+/* auto-fit lets this reflow smoothly at any width instead of only at
+   fixed breakpoints */
 .about-values {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 20px;
     margin-top: 40px;
 }
@@ -518,9 +510,7 @@ img {
     line-height: 1.6;
 }
 
-/* ============================================
-   MESSAGES SECTION
-   ============================================ */
+/* Messages */
 .messages-section {
     padding: 120px 0;
     background: #f8fafc;
@@ -570,17 +560,12 @@ img {
     50% { transform: scaleY(1); opacity: 1; }
 }
 
-
-
 .play-btn:hover {
     transform: scale(1.1);
     background: #fbbf24;
     color: #0f172a;
 }
 
-/* ============================================
-   MESSAGES LIST
-   ============================================ */
 .messages-list {
     display: flex;
     flex-direction: column;
@@ -749,9 +734,7 @@ img {
     }
 }
 
-/* ============================================
-   PRAYER SECTION
-   ============================================ */
+/* Prayer */
 .prayer {
     padding: 120px 0;
     background: #ffffff;
@@ -766,7 +749,7 @@ img {
 
 .prayer-info {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 20px;
 }
 
@@ -917,9 +900,7 @@ img {
     margin-right: 8px;
 }
 
-/* ============================================
-   CONTACT SECTION
-   ============================================ */
+/* Contact */
 .contact {
     padding: 120px 0;
     background: #f8fafc;
@@ -929,12 +910,6 @@ img {
     display: grid;
     grid-template-columns: 1fr 1.2fr;
     gap: 60px;
-}
-
-.contact-info {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
 }
 
 .contact-card {
@@ -1025,9 +1000,7 @@ img {
     min-height: 120px;
 }
 
-/* ============================================
-   FOOTER
-   ============================================ */
+/* Footer */
 .footer {
     background: #0f172a;
     color: rgba(255, 255, 255, 0.7);
@@ -1036,7 +1009,7 @@ img {
 
 .footer-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1.5fr;
+    grid-template-columns: 2fr 1fr 1fr;
     gap: 50px;
     padding-bottom: 60px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -1086,8 +1059,7 @@ img {
     transform: translateY(-3px);
 }
 
-.footer-links h4,
-.footer-newsletter h4 {
+.footer-links h4 {
     font-family: 'Playfair Display', Georgia, serif;
     font-size: 1.1rem;
     color: #ffffff;
@@ -1109,54 +1081,6 @@ img {
     transform: translateX(4px);
 }
 
-.footer-newsletter p {
-    font-size: 0.9rem;
-    margin-bottom: 20px;
-    line-height: 1.7;
-}
-
-.newsletter-form {
-    display: flex;
-    gap: 0;
-}
-
-.newsletter-form input {
-    flex: 1;
-    padding: 12px 16px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 6px 0 0 6px;
-    background: rgba(255, 255, 255, 0.05);
-    color: #ffffff;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    font-size: 0.9rem;
-    outline: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.newsletter-form input::placeholder {
-    color: rgba(255, 255, 255, 0.4);
-}
-
-.newsletter-form input:focus {
-    border-color: #fbbf24;
-    background: rgba(255, 255, 255, 0.08);
-}
-
-.newsletter-form button {
-    padding: 12px 18px;
-    background: #fbbf24;
-    border: none;
-    border-radius: 0 6px 6px 0;
-    color: #0f172a;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.newsletter-form button:hover {
-    background: #f59e0b;
-}
-
 .footer-bottom {
     padding: 24px 0;
     display: flex;
@@ -1169,9 +1093,7 @@ img {
     color: #fbbf24;
 }
 
-/* ============================================
-   MODALS
-   ============================================ */
+/* Modals */
 .audio-player-modal {
     position: fixed;
     inset: 0;
@@ -1340,9 +1262,7 @@ img {
     transition: width 0.1s linear;
 }
 
-/* ============================================
-   TOAST NOTIFICATION
-   ============================================ */
+/* Toast */
 .toast {
     position: fixed;
     bottom: 30px;
@@ -1372,9 +1292,7 @@ img {
     font-size: 1.2rem;
 }
 
-/* ============================================
-   SCROLL TO TOP
-   ============================================ */
+/* Scroll to top */
 .scroll-top {
     position: fixed;
     bottom: 30px;
@@ -1410,9 +1328,7 @@ img {
     transform: translateY(-3px);
 }
 
-/* ============================================
-   RESPONSIVE DESIGN
-   ============================================ */
+/* Responsive */
 @media (max-width: 1024px) {
     .about-grid,
     .contact-grid,
@@ -1485,17 +1401,6 @@ img {
         font-size: 2.5rem;
     }
 
-    .about-values {
-        grid-template-columns: 1fr;
-    }
-
-    
-
-    .contact-info,
-    .prayer-info {
-        grid-template-columns: 1fr;
-    }
-
     .footer-grid {
         grid-template-columns: 1fr;
         gap: 40px;
@@ -1528,14 +1433,7 @@ img {
     }
 }
 
-/* ============================================
-   ANIMATIONS
-   ============================================ */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
+/* Reveal-on-scroll animation */
 .reveal {
     opacity: 0;
     transform: translateY(40px);
