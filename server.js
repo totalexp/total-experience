@@ -2,9 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
+const mongoose = require('mongoose');
 require('dotenv').config();
 
 const cloudinary = require('cloudinary').v2;
@@ -21,24 +21,86 @@ const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 const ADMIN_SECRET = process.env.ADMIN_SECRET || ADMIN_PASSWORD;
 const TOKEN_TTL_MS = 12 * 60 * 60 * 1000;
-const DB_PATH = path.join(__dirname, 'db.json');
+
+// ============================================
+// MONGODB CONNECTION
+// ============================================
+// Set MONGODB_URI in your environment variables (Render dashboard -> your
+// service -> Environment). Get this connection string from MongoDB Atlas:
+// https://cloud.mongodb.com -> Connect -> Drivers -> copy the URI, then
+// swap in your actual username/password/database name.
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+    console.error('MONGODB_URI is not set. Add it to your environment variables.');
+}
+
+mongoose.connect(MONGODB_URI)
+    .then(() => console.log('Connected to MongoDB'))
+    .catch(err => console.error('MongoDB connection error:', err));
+
+// ============================================
+// SCHEMAS
+// ============================================
+const messageSchema = new mongoose.Schema({
+    id: { type: String, required: true, unique: true },
+    title: { type: String, required: true },
+    speaker: { type: String, required: true },
+    date: { type: String, required: true },
+    duration: { type: String, default: '00:00' },
+    plays: { type: Number, default: 0 },
+    audioUrl: { type: String, default: '' },
+    audioFile: { type: String, default: '' },
+    videoUrl: { type: String, default: '' },
+    videoPlatform: { type: String, default: '' },
+    createdAt: { type: Date, default: Date.now }
+});
+
+const prayerSchema = new mongoose.Schema({
+    id: { type: String, required: true, unique: true },
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+    type: { type: String, required: true },
+    message: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now },
+    status: { type: String, default: 'new' }
+});
+
+const contactSchema = new mongoose.Schema({
+    id: { type: String, required: true, unique: true },
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+    subject: { type: String, default: '' },
+    message: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now },
+    status: { type: String, default: 'new' }
+});
+
+const Message = mongoose.model('Message', messageSchema);
+const Prayer = mongoose.model('Prayer', prayerSchema);
+const Contact = mongoose.model('Contact', contactSchema);
+
+// Strip Mongo's internal _id/__v so responses look identical to the old
+// db.json-based API that the frontend already expects.
+function clean(doc) {
+    const obj = doc.toObject ? doc.toObject() : doc;
+    const { _id, __v, ...rest } = obj;
+    return rest;
+}
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname)));
-
-function readDB() {
-    try {
-        const data = fs.readFileSync(DB_PATH, 'utf8');
-        return JSON.parse(data);
-    } catch (err) {
-        return { messages: [], prayers: [], contacts: [] };
+// SECURITY: block direct access to db.json before it ever reaches the
+// static file handler below. Serving the whole project directory
+// (as this app previously did) exposed prayer requests, contact
+// messages, and emails to anyone who requested /db.json directly.
+app.use((req, res, next) => {
+    if (req.path === '/db.json') {
+        return res.status(404).send('Not found');
     }
-}
-
-function writeDB(data) {
-    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
-}
+    next();
+});
+app.use(express.static(path.join(__dirname)));
 
 function createToken() {
     const expires = Date.now() + TOKEN_TTL_MS;
@@ -67,11 +129,8 @@ function requireAdmin(req, res, next) {
 }
 
 // ============================================
-// CLOUDINARY STORAGE CONFIG (FIXED)
+// CLOUDINARY STORAGE CONFIG (unchanged)
 // ============================================
-// NOTE: resource_type changed from 'raw' to 'video' — Cloudinary handles
-// audio files through the video pipeline, which gives correct content-type
-// headers and proper range-request support for streaming/seeking in <audio>.
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
@@ -119,34 +178,44 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-app.get('/api/messages', (req, res) => {
-    const db = readDB();
-    res.json({ success: true, messages: db.messages });
-});
-
-app.get('/api/messages/:id', (req, res) => {
-    const db = readDB();
-    const message = db.messages.find(m => m.id === req.params.id);
-    if (!message) {
-        return res.status(404).json({ success: false, error: 'Message not found' });
+app.get('/api/messages', async (req, res) => {
+    try {
+        const messages = await Message.find().sort({ createdAt: -1 });
+        res.json({ success: true, messages: messages.map(clean) });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
     }
-    res.json({ success: true, message });
 });
 
-app.post('/api/messages/:id/play', (req, res) => {
-    const db = readDB();
-    const message = db.messages.find(m => m.id === req.params.id);
+app.get('/api/messages/:id', async (req, res) => {
+    try {
+        const message = await Message.findOne({ id: req.params.id });
+        if (!message) {
+            return res.status(404).json({ success: false, error: 'Message not found' });
+        }
+        res.json({ success: true, message: clean(message) });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
 
-    if (message) {
-        message.plays = (message.plays || 0) + 1;
-        writeDB(db);
+app.post('/api/messages/:id/play', async (req, res) => {
+    try {
+        const message = await Message.findOneAndUpdate(
+            { id: req.params.id },
+            { $inc: { plays: 1 } },
+            { new: true }
+        );
+        if (!message) {
+            return res.status(404).json({ success: false, error: 'Message not found' });
+        }
         res.json({ success: true, plays: message.plays });
-    } else {
-        res.status(404).json({ success: false, error: 'Message not found' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
-app.post('/api/prayers', (req, res) => {
+app.post('/api/prayers', async (req, res) => {
     try {
         const { name, email, type, message } = req.body;
 
@@ -157,27 +226,23 @@ app.post('/api/prayers', (req, res) => {
             });
         }
 
-        const db = readDB();
-        const newPrayer = {
+        const newPrayer = new Prayer({
             id: `prayer-${uuidv4().slice(0, 8)}`,
             name: String(name).trim(),
             email: String(email).trim(),
             type: String(type).trim(),
-            message: String(message).trim(),
-            createdAt: new Date().toISOString(),
-            status: 'new'
-        };
+            message: String(message).trim()
+        });
 
-        db.prayers.unshift(newPrayer);
-        writeDB(db);
+        await newPrayer.save();
 
-        res.status(201).json({ success: true, prayer: newPrayer });
+        res.status(201).json({ success: true, prayer: clean(newPrayer) });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
-app.post('/api/contacts', (req, res) => {
+app.post('/api/contacts', async (req, res) => {
     try {
         const { name, email, subject, message } = req.body;
 
@@ -188,21 +253,17 @@ app.post('/api/contacts', (req, res) => {
             });
         }
 
-        const db = readDB();
-        const newContact = {
+        const newContact = new Contact({
             id: `contact-${uuidv4().slice(0, 8)}`,
             name: String(name).trim(),
             email: String(email).trim(),
             subject: subject ? String(subject).trim() : '',
-            message: String(message).trim(),
-            createdAt: new Date().toISOString(),
-            status: 'new'
-        };
+            message: String(message).trim()
+        });
 
-        db.contacts.unshift(newContact);
-        writeDB(db);
+        await newContact.save();
 
-        res.status(201).json({ success: true, contact: newContact });
+        res.status(201).json({ success: true, contact: clean(newContact) });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -220,7 +281,7 @@ app.post('/api/admin/login', (req, res) => {
 // ============================================
 // ADMIN-ONLY ROUTES
 // ============================================
-app.post('/api/messages', requireAdmin, uploadAudio, (req, res) => {
+app.post('/api/messages', requireAdmin, uploadAudio, async (req, res) => {
     try {
         const { title, speaker, date, duration, videoUrl, videoPlatform } = req.body;
 
@@ -231,31 +292,24 @@ app.post('/api/messages', requireAdmin, uploadAudio, (req, res) => {
             });
         }
 
-        const db = readDB();
         const audioUrl = req.file ? req.file.path : '';
 
-        const newMessage = {
+        const newMessage = new Message({
             id: `msg-${uuidv4().slice(0, 8)}`,
             title: String(title).trim(),
             speaker: String(speaker).trim(),
             date,
             duration: duration || '00:00',
             plays: 0,
-            // FIX: expose the Cloudinary URL as `audioUrl` (what the frontend
-            // checks first). Previously only `audioFile` was set, so the
-            // frontend fell through to its "/uploads/" + audioFile fallback
-            // and mangled the full Cloudinary URL into a broken path.
             audioUrl: audioUrl,
             audioFile: audioUrl,
             videoUrl: videoUrl || '',
-            videoPlatform: videoPlatform || '',
-            createdAt: new Date().toISOString()
-        };
+            videoPlatform: videoPlatform || ''
+        });
 
-        db.messages.unshift(newMessage);
-        writeDB(db);
+        await newMessage.save();
 
-        res.status(201).json({ success: true, message: newMessage });
+        res.status(201).json({ success: true, message: clean(newMessage) });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -263,14 +317,11 @@ app.post('/api/messages', requireAdmin, uploadAudio, (req, res) => {
 
 app.delete('/api/messages/:id', requireAdmin, async (req, res) => {
     try {
-        const db = readDB();
-        const messageIndex = db.messages.findIndex(m => m.id === req.params.id);
+        const message = await Message.findOne({ id: req.params.id });
 
-        if (messageIndex === -1) {
+        if (!message) {
             return res.status(404).json({ success: false, error: 'Message not found' });
         }
-
-        const message = db.messages[messageIndex];
 
         if (message.audioFile) {
             const publicId = message.audioFile.split('/').pop().split('.')[0];
@@ -281,8 +332,7 @@ app.delete('/api/messages/:id', requireAdmin, async (req, res) => {
             }
         }
 
-        db.messages.splice(messageIndex, 1);
-        writeDB(db);
+        await Message.deleteOne({ id: req.params.id });
 
         res.json({ success: true, message: 'Message deleted' });
     } catch (err) {
@@ -290,29 +340,47 @@ app.delete('/api/messages/:id', requireAdmin, async (req, res) => {
     }
 });
 
-app.get('/api/prayers', requireAdmin, (req, res) => {
-    const db = readDB();
-    res.json({ success: true, prayers: db.prayers });
+app.get('/api/prayers', requireAdmin, async (req, res) => {
+    try {
+        const prayers = await Prayer.find().sort({ createdAt: -1 });
+        res.json({ success: true, prayers: prayers.map(clean) });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
-app.get('/api/contacts', requireAdmin, (req, res) => {
-    const db = readDB();
-    res.json({ success: true, contacts: db.contacts });
+app.get('/api/contacts', requireAdmin, async (req, res) => {
+    try {
+        const contacts = await Contact.find().sort({ createdAt: -1 });
+        res.json({ success: true, contacts: contacts.map(clean) });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
-app.get('/api/admin/stats', requireAdmin, (req, res) => {
-    const db = readDB();
-    const totalPlays = db.messages.reduce((sum, m) => sum + (m.plays || 0), 0);
+app.get('/api/admin/stats', requireAdmin, async (req, res) => {
+    try {
+        const [totalMessages, totalPrayers, totalContacts, messages] = await Promise.all([
+            Message.countDocuments(),
+            Prayer.countDocuments(),
+            Contact.countDocuments(),
+            Message.find({}, 'plays')
+        ]);
 
-    res.json({
-        success: true,
-        stats: {
-            totalMessages: db.messages.length,
-            totalPrayers: db.prayers.length,
-            totalContacts: db.contacts.length,
-            totalPlays: totalPlays
-        }
-    });
+        const totalPlays = messages.reduce((sum, m) => sum + (m.plays || 0), 0);
+
+        res.json({
+            success: true,
+            stats: {
+                totalMessages,
+                totalPrayers,
+                totalContacts,
+                totalPlays
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 app.use((err, req, res, next) => {
@@ -322,5 +390,4 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
     console.log(`Total Experience International server running on http://localhost:${PORT}`);
-    console.log(`Database: ${DB_PATH}`);
 });
