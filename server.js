@@ -349,10 +349,34 @@ app.get('/api/prayers', requireAdmin, async (req, res) => {
     }
 });
 
+app.delete('/api/prayers/:id', requireAdmin, async (req, res) => {
+    try {
+        const result = await Prayer.deleteOne({ id: req.params.id });
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ success: false, error: 'Prayer not found' });
+        }
+        res.json({ success: true, message: 'Prayer deleted' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 app.get('/api/contacts', requireAdmin, async (req, res) => {
     try {
         const contacts = await Contact.find().sort({ createdAt: -1 });
         res.json({ success: true, contacts: contacts.map(clean) });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.delete('/api/contacts/:id', requireAdmin, async (req, res) => {
+    try {
+        const result = await Contact.deleteOne({ id: req.params.id });
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ success: false, error: 'Contact not found' });
+        }
+        res.json({ success: true, message: 'Contact deleted' });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }

@@ -1,6 +1,4 @@
-/* ============================================
-   ADMIN DASHBOARD
-   ============================================ */
+/* Admin Dashboard */
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -11,9 +9,7 @@ body {
     line-height: 1.6;
 }
 
-/* ============================================
-   LOGIN SCREEN
-   ============================================ */
+/* Login screen */
 .login-screen {
     min-height: 100vh;
     display: flex;
@@ -85,9 +81,7 @@ body {
     color: #94a3b8;
 }
 
-/* ============================================
-   DASHBOARD LAYOUT
-   ============================================ */
+/* Dashboard layout */
 .dashboard {
     display: flex;
     min-height: 100vh;
@@ -236,9 +230,7 @@ body {
     color: white;
 }
 
-/* ============================================
-   CONTENT SECTIONS
-   ============================================ */
+/* Content sections */
 .content-section {
     display: none;
     padding: 32px;
@@ -254,9 +246,7 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* ============================================
-   STATS
-   ============================================ */
+/* Stats */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -302,9 +292,7 @@ body {
     color: #94a3b8;
 }
 
-/* ============================================
-   TABLES
-   ============================================ */
+/* Tables */
 .section-header-row {
     display: flex;
     justify-content: space-between;
@@ -360,9 +348,7 @@ body {
     border-bottom: none;
 }
 
-/* ============================================
-   UPLOAD CARD
-   ============================================ */
+/* Upload card */
 .upload-card {
     background: #ffffff;
     padding: 32px;
@@ -476,9 +462,7 @@ body {
     font-weight: 500;
 }
 
-/* ============================================
-   BUTTONS
-   ============================================ */
+/* Buttons */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -519,9 +503,7 @@ body {
     padding: 14px;
 }
 
-/* ============================================
-   VIDEO BADGE
-   ============================================ */
+/* Video badge */
 .video-badge {
     display: inline-flex;
     align-items: center;
@@ -537,9 +519,7 @@ body {
 .video-badge.facebook { background: #1877f2; }
 .video-badge.none { background: #e2e8f0; color: #94a3b8; }
 
-/* ============================================
-   TOAST
-   ============================================ */
+/* Toast */
 .toast {
     position: fixed;
     bottom: 30px;
@@ -568,9 +548,7 @@ body {
     color: #fbbf24;
 }
 
-/* ============================================
-   RESPONSIVE
-   ============================================ */
+/* Responsive */
 @media (max-width: 1024px) {
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }

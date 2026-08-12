@@ -15,9 +15,7 @@ if (adminToken) {
     showDashboard();
 }
 
-// ============================================
-// HELPERS
-// ============================================
+// Helpers
 function escapeHtml(text) {
     if (text === null || text === undefined) return '';
     const div = document.createElement('div');
@@ -45,9 +43,7 @@ async function adminFetch(url, options = {}) {
     return res;
 }
 
-// ============================================
-// LOGIN / LOGOUT
-// ============================================
+// Login / logout
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const password = document.getElementById('adminPassword').value;
@@ -85,9 +81,7 @@ function showDashboard() {
     loadOverview();
 }
 
-// ============================================
-// NAVIGATION
-// ============================================
+// Navigation
 navItems.forEach(item => {
     item.addEventListener('click', (e) => {
         e.preventDefault();
@@ -109,9 +103,6 @@ navItems.forEach(item => {
     });
 });
 
-// ============================================
-// TOAST
-// ============================================
 function showToast(msg, type = 'success') {
     toastMessage.textContent = msg;
     const icon = toast.querySelector('i');
@@ -120,9 +111,7 @@ function showToast(msg, type = 'success') {
     setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
-// ============================================
-// OVERVIEW
-// ============================================
+// Overview
 async function loadOverview() {
     try {
         const res = await adminFetch(`${API_URL}/api/admin/stats`);
@@ -154,9 +143,7 @@ async function loadOverview() {
     }
 }
 
-// ============================================
-// MESSAGES
-// ============================================
+// Messages
 async function loadMessages() {
     try {
         const res = await fetch(`${API_URL}/api/messages`);
@@ -207,9 +194,7 @@ window.deleteMessage = async function(id) {
     }
 };
 
-// ============================================
-// PRAYERS
-// ============================================
+// Prayers
 async function loadPrayers() {
     try {
         const res = await adminFetch(`${API_URL}/api/prayers`);
@@ -217,7 +202,7 @@ async function loadPrayers() {
 
         const tbody = document.getElementById('prayersTable');
         if (data.prayers.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#a0aec0;padding:40px">No prayer requests yet</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#a0aec0;padding:40px">No prayer requests yet</td></tr>';
             return;
         }
 
@@ -228,6 +213,11 @@ async function loadPrayers() {
                 <td><span class="video-badge" style="background:#805ad5">${escapeHtml(p.type)}</span></td>
                 <td style="max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(p.message)}</td>
                 <td>${formatDate(p.createdAt)}</td>
+                <td>
+                    <button class="btn btn-danger" onclick="deletePrayer('${p.id}')">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </td>
             </tr>
         `).join('');
 
@@ -236,9 +226,26 @@ async function loadPrayers() {
     }
 }
 
-// ============================================
-// CONTACTS
-// ============================================
+window.deletePrayer = async function(id) {
+    if (!confirm('Delete this prayer request / testimony / feedback? This cannot be undone.')) return;
+
+    try {
+        const res = await adminFetch(`${API_URL}/api/prayers/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+
+        if (data.success) {
+            showToast('Deleted');
+            loadPrayers();
+            loadOverview();
+        } else {
+            showToast(data.error || 'Failed to delete', 'error');
+        }
+    } catch (err) {
+        showToast('Failed to delete', 'error');
+    }
+};
+
+// Contacts
 async function loadContacts() {
     try {
         const res = await adminFetch(`${API_URL}/api/contacts`);
@@ -246,7 +253,7 @@ async function loadContacts() {
 
         const tbody = document.getElementById('contactsTable');
         if (data.contacts.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#a0aec0;padding:40px">No contact submissions yet</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#a0aec0;padding:40px">No contact submissions yet</td></tr>';
             return;
         }
 
@@ -257,6 +264,11 @@ async function loadContacts() {
                 <td>${escapeHtml(c.subject) || '-'}</td>
                 <td style="max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(c.message)}</td>
                 <td>${formatDate(c.createdAt)}</td>
+                <td>
+                    <button class="btn btn-danger" onclick="deleteContact('${c.id}')">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </td>
             </tr>
         `).join('');
 
@@ -265,9 +277,26 @@ async function loadContacts() {
     }
 }
 
-// ============================================
-// UPLOAD
-// ============================================
+window.deleteContact = async function(id) {
+    if (!confirm('Delete this contact submission? This cannot be undone.')) return;
+
+    try {
+        const res = await adminFetch(`${API_URL}/api/contacts/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+
+        if (data.success) {
+            showToast('Deleted');
+            loadContacts();
+            loadOverview();
+        } else {
+            showToast(data.error || 'Failed to delete', 'error');
+        }
+    } catch (err) {
+        showToast('Failed to delete', 'error');
+    }
+};
+
+// Upload
 const uploadForm = document.getElementById('uploadForm');
 const fileUploadBox = document.getElementById('fileUploadBox');
 const uploadAudioFile = document.getElementById('uploadAudioFile');
@@ -344,16 +373,7 @@ uploadForm.addEventListener('submit', async (e) => {
     }
 });
 
-// ============================================
-// REFRESH BUTTONS
-// ============================================
-document.getElementById('refreshMessages').addEventListener('click', loadMessages);
-document.getElementById('refreshPrayers').addEventListener('click', loadPrayers);
-document.getElementById('refreshContacts').addEventListener('click', loadContacts);
-
-// ============================================
-// FORMATTING HELPERS
-// ============================================
+// Formatting helpers
 function formatDate(dateStr) {
     if (!dateStr) return '-';
     const d = new Date(dateStr);
