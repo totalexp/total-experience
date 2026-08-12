@@ -390,11 +390,25 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
         submitBtn.disabled = true;
 
+        const nameEl = document.getElementById('name');
+        const emailEl = document.getElementById('email');
+        const messageEl = document.getElementById('message');
+
+        if (!nameEl || !emailEl || !messageEl) {
+            console.error('Contact form: missing expected field element(s).', {
+                nameEl, emailEl, messageEl
+            });
+            showToast('Form error: please contact the site admin', 'error');
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            return;
+        }
+
         const data = {
-            name: document.getElementById('name').value,
-            email: document.getElementById('email').value,
-            subject: document.getElementById('subject').value,
-            message: document.getElementById('message').value
+            name: nameEl.value,
+            email: emailEl.value,
+            subject: document.getElementById('subject')?.value || '',
+            message: messageEl.value
         };
 
         try {
