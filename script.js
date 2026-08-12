@@ -559,6 +559,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    console.log('%c Total Experience International ', 'background: #1e293b; color: #fbbf24; font-size: 18px; font-weight: bold; padding: 8px 16px; border-radius: 8px;');
+    console.log('%c Total Experience Intl ', 'background: #1e293b; color: #fbbf24; font-size: 18px; font-weight: bold; padding: 8px 16px; border-radius: 8px;');
     console.log('%c Frontend loaded. API: ' + API_URL, 'color: #1e293b; font-size: 12px;');
 });
