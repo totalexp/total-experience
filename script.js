@@ -444,15 +444,38 @@ document.addEventListener('DOMContentLoaded', function() {
     window.submitPrayerForm = async function() {
         const submitBtn = prayerForm.querySelector('button[onclick="submitPrayerForm()"]');
         const originalText = submitBtn.innerHTML;
+
+        const nameEl = document.getElementById('prayerName');
+        const emailEl = document.getElementById('prayerEmail');
+        const typeEl = document.getElementById('prayerType');
+        const messageEl = document.getElementById('prayerMessage');
+
+        if (!nameEl || !emailEl || !typeEl || !messageEl) {
+            console.error('Prayer form: missing expected field element(s).', {
+                nameEl, emailEl, typeEl, messageEl
+            });
+            showToast('Form error: please contact the site admin', 'error');
+            return;
+        }
+
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
         submitBtn.disabled = true;
 
         const data = {
-            name: document.getElementById('prayerName').value,
-            email: document.getElementById('prayerEmail').value,
-            type: document.getElementById('prayerType').value,
-            message: document.getElementById('prayerMessage').value
+            name: nameEl.value,
+            email: emailEl.value,
+            type: typeEl.value,
+            message: messageEl.value
         };
+
+        // Tailored confirmation wording per type, instead of a flat
+        // "has been received" for everything.
+        const typeConfirmations = {
+            'Prayer Request': 'Your prayer request has been received. We will be praying for you!',
+            'Testimony': 'Thank you for sharing your testimony! We are blessed by what God has done.',
+            'Feedback': 'Thank you for your feedback! We appreciate your input.'
+        };
+        const confirmationText = typeConfirmations[data.type] || 'Your message has been received.';
 
         try {
             const res = await fetch(`${API_URL}/api/prayers`, {
@@ -464,7 +487,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await res.json();
 
             if (result.success) {
-                showToast(`Thank you, ${data.name}! Your ${data.type.toLowerCase()} has been received.`, 'success');
+                showToast(`Thank you, ${data.name}! ${confirmationText}`, 'success');
                 prayerForm.reset();
             } else {
                 showToast(result.error || 'Failed to send', 'error');
