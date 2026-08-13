@@ -204,7 +204,7 @@ app.post('/api/messages/:id/play', async (req, res) => {
         const message = await Message.findOneAndUpdate(
             { id: req.params.id },
             { $inc: { plays: 1 } },
-            { new: true }
+            { returnDocument: 'after' }
         );
         if (!message) {
             return res.status(404).json({ success: false, error: 'Message not found' });
