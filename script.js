@@ -80,10 +80,28 @@ document.addEventListener('DOMContentLoaded', function() {
     // (like Cloudinary) unless the server sends a Content-Disposition:
     // attachment header. Cloudinary supports forcing that via the
     // 'fl_attachment' flag inserted into the URL after '/upload/'.
-    function getDownloadSrc(src) {
+    // Turns a message title into a safe string for use inside a Cloudinary
+    // URL segment (letters, numbers, spaces->underscores only).
+    function sanitizeFilename(name) {
+        return (name || 'audio')
+            .replace(/[^a-zA-Z0-9-_ ]/g, '')
+            .trim()
+            .replace(/\s+/g, '_')
+            .slice(0, 100) || 'audio';
+    }
+
+    // Browsers ignore the <a download> attribute for cross-origin URLs
+    // (like Cloudinary) unless the server sends a Content-Disposition
+    // header with a filename. Cloudinary supports both forcing the
+    // download AND setting the filename via 'fl_attachment:name' inserted
+    // into the URL after '/upload/'. Without a name, mobile browsers
+    // (especially iOS Safari) show Cloudinary's internal file ID instead
+    // of the actual message title.
+    function getDownloadSrc(src, filename) {
         if (!src) return src;
         if (src.includes('res.cloudinary.com') && src.includes('/upload/') && !src.includes('fl_attachment')) {
-            return src.replace('/upload/', '/upload/fl_attachment/');
+            const safeName = encodeURIComponent(sanitizeFilename(filename));
+            return src.replace('/upload/', `/upload/fl_attachment:${safeName}/`);
         }
         return src;
     }
@@ -96,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             let actionsHtml = '';
             if (audioSrc) {
-                actionsHtml += `<a href="${getDownloadSrc(audioSrc)}" download class="download-btn" title="Download"><i class="fas fa-download"></i></a>`;
+                actionsHtml += `<a href="${getDownloadSrc(audioSrc, msg.title)}" download class="download-btn" title="Download"><i class="fas fa-download"></i></a>`;
             }
             if (msg.videoUrl) {
                 const isFacebook = msg.videoPlatform === 'facebook' || msg.videoUrl.includes('facebook');
@@ -272,7 +290,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 audioPlayerTitle.textContent = title;
                 audioPlayerSpeaker.textContent = speaker;
-                audioDownloadBtn.href = getDownloadSrc(audioSrc);
+                audioDownloadBtn.href = getDownloadSrc(audioSrc, title);
                 audioDownloadBtn.download = title + '.mp3';
 
                 audioModal.classList.add('active');

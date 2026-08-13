@@ -82,6 +82,30 @@ function showDashboard() {
 }
 
 // Navigation
+const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
+const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+const sidebarEl = document.querySelector('.sidebar');
+
+function openMobileSidebar() {
+    sidebarEl.classList.add('mobile-active');
+    sidebarBackdrop.classList.add('active');
+}
+
+function closeMobileSidebar() {
+    sidebarEl.classList.remove('mobile-active');
+    sidebarBackdrop.classList.remove('active');
+}
+
+mobileSidebarToggle.addEventListener('click', () => {
+    if (sidebarEl.classList.contains('mobile-active')) {
+        closeMobileSidebar();
+    } else {
+        openMobileSidebar();
+    }
+});
+
+sidebarBackdrop.addEventListener('click', closeMobileSidebar);
+
 navItems.forEach(item => {
     item.addEventListener('click', (e) => {
         e.preventDefault();
@@ -100,6 +124,8 @@ navItems.forEach(item => {
         if (section === 'prayers') loadPrayers();
         if (section === 'contacts') loadContacts();
         if (section === 'overview') loadOverview();
+
+        closeMobileSidebar();
     });
 });
 
